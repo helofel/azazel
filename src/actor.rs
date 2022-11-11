@@ -1,3 +1,5 @@
+use std::collections::LinkedList;
+
 use rand::{distributions::Alphanumeric, Rng};
 
 pub static USERS: i32 = 1_000_000;
@@ -6,7 +8,7 @@ pub static USERS: i32 = 1_000_000;
 pub struct Human<'a> {
     name: Option<Box<String>>,
     parents: Option<Box<String>>,
-    line: Option<Box<Stack<Moment<'a>>>> //Queue
+    pub line: &'a mut Option<Box<LinkedList<Moment<'a>>>> 
 }
 
 #[derive(Debug)]
@@ -24,7 +26,7 @@ struct Agent<'c> {
     tasks: &'c Option<Box<std::vec::Vec<Moment<'c>>>> //Queue
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct Moment<'d> {
     id: &'d str,
     agents: &'d Option<Vec<Agent<'d>>>
@@ -32,18 +34,21 @@ pub struct Moment<'d> {
 
 
 #[derive(Debug)]
-pub struct Stack<T> {
-  stack: Vec<T>,
+pub struct Stack<'e, T: Copy> {
+  pub stack: &'e mut Vec<T>,
 }
+
 enum Errors {
     HumanInstantiationError,
     EntityInstantiationError,
     AgentInstantiationError
 }
 
-impl<T> Stack<T> {
+//impl<'e, T> Copy for Stack<'e, T> where T: Copy {}
+
+impl<'e, T> Stack<'e, T> where T: Copy {
   pub fn new() -> Self {
-    Stack { stack: Vec::new() }
+    Stack { stack: &mut Vec::new() }
   }
 
   pub fn length(&self) -> usize {
@@ -68,14 +73,29 @@ impl<T> Stack<T> {
 }
 
 impl<'a> Human<'a> {
-    pub fn new (name: String, mother: String, father: String) -> Option<Human<'a>> { 
-        let m = [mother, father].concat();
 
-        Some(Human {
+    pub fn new (name: String, mother: String, father: String) -> Option<Box<Self>> { 
+        let m = [mother, father].concat();
+        let s = Some(Vec::new());
+        let mut moments = [
+          Moment { id: "Life Insurance", agents: &s},
+          Moment { id: "Nanny", agents: &Some(Vec::new())},
+          Moment { id: "Pre-school", agents: &Some(Vec::new())},
+          Moment { id: "Elementary", agents: &Some(Vec::new())},
+          Moment { id: "Middle school", agents: &Some(Vec::new())},
+          Moment { id: "High school", agents: &Some(Vec::new())},
+          Moment { id: "Driving school", agents: &Some(Vec::new())},
+          Moment { id: "Road test", agents: &Some(Vec::new())},
+          Moment { id: "Car", agents: &Some(Vec::new())},
+          Moment { id: "College", agents: &Some(Vec::new())},
+          Moment { id: "Job", agents: &Some(Vec::new())}
+        ];
+
+        Some(Box::new(Self {
             name: Some(Box::new(name.clone())),
             parents: Some(Box::new(m.clone())),
-            line: Some(Box::new(Stack::new())) 
-        })
+            line: &mut Some(Box::new(LinkedList::from(moments)))
+        }))
     }
 }
 
